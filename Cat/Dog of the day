@@ -1,0 +1,56 @@
+import logging
+import requests
+import random
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, CallbackContext
+
+# Your Telegram bot token from BotFather
+TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN'
+
+# URL for cat and dog pictures API
+CAT_API_URL = 'https://api.thecatapi.com/v1/images/search'
+DOG_API_URL = 'https://dog.ceo/api/breeds/image/random'
+
+# Set up logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+
+# Command handler for /start
+def start(update: Update, _: CallbackContext) -> None:
+    user = update.effective_user
+    update.message.reply_text(f'Hello, {user.mention_html()}! I am the Cat/Dog of the Day bot. '
+                              f'Use /cat to see a random cat picture and /dog for a random dog picture.')
+
+# Command handler for /cat
+def cat(update: Update, _: CallbackContext) -> None:
+    response = requests.get(CAT_API_URL)
+    data = response.json()
+    cat_picture_url = data[0]['url']
+    update.message.reply_photo(photo=cat_picture_url)
+
+# Command handler for /dog
+def dog(update: Update, _: CallbackContext) -> None:
+    response = requests.get(DOG_API_URL)
+    data = response.json()
+    dog_picture_url = data['message']
+    update.message.reply_photo(photo=dog_picture_url)
+
+def main() -> None:
+    updater = Updater(TOKEN)
+
+    # Get the dispatcher to register handlers
+    dp = updater.dispatcher
+
+    # Register command handlers
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler("cat", cat))
+    dp.add_handler(CommandHandler("dog", dog))
+
+    # Start the Bot
+    updater.start_polling()
+
+    # Run the bot until the user presses Ctrl-C
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
+
